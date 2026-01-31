@@ -212,7 +212,7 @@ const Message = memo((msgData: MessageModel & msgDataProps) => {
             >
               {isChannel
                 ? selectedRoom?.name
-                : sender.name + " " + sender.lastName}
+                : `${sender.name}${sender.lastName ? " " + sender.lastName : ""}`}
             </p>
           )}
 

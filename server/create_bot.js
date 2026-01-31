@@ -24,22 +24,24 @@ const createBot = async () => {
     let bot = await UserSchema.findOne({ username: BOT_USERNAME });
     
     if (bot) {
-      console.log(`✅ Bot user '${BOT_USERNAME}' already exists. Updating info...`);
-      bot.name = BOT_NAME;
-      bot.avatar = BOT_AVATAR;
-      await bot.save();
-      console.log(`🎉 Bot updated successfully!`);
-    } else {
-        // Check if old bot "Sla" exists to rename it
-        const oldBot = await UserSchema.findOne({ username: "Sla" });
-        if (oldBot) {
-            console.log(`🔄 Renaming old bot 'Sla' to '${BOT_USERNAME}'...`);
-            oldBot.username = BOT_USERNAME;
-            oldBot.name = BOT_NAME;
-            oldBot.avatar = BOT_AVATAR;
-            await oldBot.save();
-            bot = oldBot;
-            console.log(`🎉 Bot renamed and updated successfully!`);
+       console.log(`✅ Bot user '${BOT_USERNAME}' already exists. Updating info...`);
+       bot.name = BOT_NAME;
+       bot.lastName = "";
+       bot.avatar = BOT_AVATAR;
+       await bot.save();
+       console.log(`🎉 Bot updated successfully!`);
+     } else {
+         // Check if old bot "Sla" exists to rename it
+         const oldBot = await UserSchema.findOne({ username: "Sla" });
+         if (oldBot) {
+             console.log(`🔄 Renaming old bot 'Sla' to '${BOT_USERNAME}'...`);
+             oldBot.username = BOT_USERNAME;
+             oldBot.name = BOT_NAME;
+             oldBot.lastName = "";
+             oldBot.avatar = BOT_AVATAR;
+             await oldBot.save();
+             bot = oldBot;
+             console.log(`🎉 Bot renamed and updated successfully!`);
         } else {
             console.log(`🤖 Creating bot user '${BOT_USERNAME}'...`);
 
@@ -50,6 +52,7 @@ const createBot = async () => {
 
             bot = await UserSchema.create({
               name: BOT_NAME,
+              lastName: "",
               username: BOT_USERNAME,
               phone: BOT_PHONE,
               password: hashedPassword,
