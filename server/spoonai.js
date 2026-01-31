@@ -7,7 +7,7 @@ import UserSchema from "../src/schemas/userSchema.js";
 // 注意：以后如果换回 SpoonAI，只需要修改 apiUrl 和 model，以及解析返回值的逻辑
 const BOT_CONFIG = {
   triggerPrefix: "@", 
-  botUsername: "Sla", // 机器人的用户名
+  botUsername: "Slogan-AI", // 机器人的用户名
   // 请在 .env 文件中配置 DEEPSEEK_API_KEY
   apiKey: process.env.DEEPSEEK_API_KEY, 
   // DeepSeek API 地址 (OpenAI 兼容接口)

@@ -3,10 +3,11 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import UserSchema from "../src/schemas/userSchema.js";
 
-const BOT_USERNAME = "Sla";
-const BOT_NAME = "Spoon AI";
+const BOT_USERNAME = "Slogan-AI";
+const BOT_NAME = "Slogan-AI";
 // Use a fake phone number that won't conflict with real users
 const BOT_PHONE = "0000000000"; 
+const BOT_AVATAR = "/slogan-ai.png"; // User needs to place this file in public/
 
 const createBot = async () => {
   try {
@@ -19,37 +20,53 @@ const createBot = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("✅ Connected.");
 
-    // Check if bot exists
-    const existingBot = await UserSchema.findOne({ username: BOT_USERNAME });
-    if (existingBot) {
-      console.log(`✅ Bot user '${BOT_USERNAME}' already exists. ID: ${existingBot._id}`);
-      process.exit(0);
+    // Check if new bot exists
+    let bot = await UserSchema.findOne({ username: BOT_USERNAME });
+    
+    if (bot) {
+      console.log(`✅ Bot user '${BOT_USERNAME}' already exists. Updating info...`);
+      bot.name = BOT_NAME;
+      bot.avatar = BOT_AVATAR;
+      await bot.save();
+      console.log(`🎉 Bot updated successfully!`);
+    } else {
+        // Check if old bot "Sla" exists to rename it
+        const oldBot = await UserSchema.findOne({ username: "Sla" });
+        if (oldBot) {
+            console.log(`🔄 Renaming old bot 'Sla' to '${BOT_USERNAME}'...`);
+            oldBot.username = BOT_USERNAME;
+            oldBot.name = BOT_NAME;
+            oldBot.avatar = BOT_AVATAR;
+            await oldBot.save();
+            bot = oldBot;
+            console.log(`🎉 Bot renamed and updated successfully!`);
+        } else {
+            console.log(`🤖 Creating bot user '${BOT_USERNAME}'...`);
+
+            // Generate a random password (no one needs to know it)
+            const randomPassword = Math.random().toString(36).slice(-8);
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(randomPassword, salt);
+
+            bot = await UserSchema.create({
+              name: BOT_NAME,
+              username: BOT_USERNAME,
+              phone: BOT_PHONE,
+              password: hashedPassword,
+              biography: "I am an AI assistant powered by DeepSeek.",
+              avatar: BOT_AVATAR, 
+              status: "online"
+            });
+            console.log(`🎉 Bot created successfully!`);
+        }
     }
-
-    console.log(`🤖 Creating bot user '${BOT_USERNAME}'...`);
-
-    // Generate a random password (no one needs to know it)
-    const randomPassword = Math.random().toString(36).slice(-8);
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(randomPassword, salt);
-
-    const newBot = await UserSchema.create({
-      name: BOT_NAME,
-      username: BOT_USERNAME,
-      phone: BOT_PHONE,
-      password: hashedPassword,
-      biography: "I am an AI assistant powered by DeepSeek.",
-      avatar: "https://cdn-icons-png.flaticon.com/512/4712/4712109.png", // Generic robot icon
-      status: "online"
-    });
-
-    console.log(`🎉 Bot created successfully!`);
-    console.log(`ID: ${newBot._id}`);
-    console.log(`Username: ${newBot.username}`);
+    
+    console.log(`ID: ${bot._id}`);
+    console.log(`Username: ${bot.username}`);
     
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error creating bot:", error);
+    console.error("❌ Error creating/updating bot:", error);
     process.exit(1);
   }
 };
