@@ -1,6 +1,6 @@
 import { BsEmojiSmile } from "react-icons/bs";
 import { IoMdClose } from "react-icons/io";
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MdAttachFile, MdModeEditOutline, MdOutlineDone } from "react-icons/md";
 import { BsFillReplyFill } from "react-icons/bs";
 import VoiceMessageRecorder from "./voice/VoiceMessageRecorder";
@@ -15,6 +15,7 @@ import EmojiPicker from "../modules/EmojiPicker";
 import { v4 as uuidv4 } from "uuid"; // Assume uuid is installed or add it
 import { pendingMessagesService } from "@/utils/pendingMessages";
 import { isMobile } from "@/utils/isMobile";
+import User from "@/models/user";
 
 interface Props {
   replayData?: Partial<Message>;
@@ -35,15 +36,53 @@ const MessageInput = ({
   const inputBoxRef = useRef<HTMLDivElement | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  
+  // Mention State
+  const [showMentionList, setShowMentionList] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
 
   const selectedRoom = useGlobalStore((state) => state?.selectedRoom);
   const userRooms = useUserStore((state) => state.rooms);
+  const [fetchedMembers, setFetchedMembers] = useState<User[]>([]);
   const { rooms } = useSockets((state) => state);
   const myData = useUserStore((state) => state);
   const setter = useGlobalStore((state) => state.setter);
   const roomId = selectedRoom?._id;
 
-  //Helper function to reset the height of TextArea
+  // Fetch members when room changes
+  useEffect(() => {
+    if (selectedRoom?.type === "group" || selectedRoom?.type === "channel") {
+      if (rooms && roomId) {
+        rooms.emit("getRoomMembers", { roomID: roomId });
+        
+        const handleGetMembers = (participants: User[]) => {
+            setFetchedMembers(participants);
+        };
+        
+        rooms.on("getRoomMembers", handleGetMembers);
+        
+        return () => {
+            rooms.off("getRoomMembers", handleGetMembers);
+        };
+      }
+    } else {
+        setFetchedMembers([]);
+    }
+  }, [roomId, rooms, selectedRoom?.type]);
+  
+  // Get populated participants
+  const roomParticipants = useMemo(() => {
+    // If we have fetched members, use them
+    if (fetchedMembers.length > 0) return fetchedMembers;
+    
+    if (!selectedRoom) return [];
+    
+    // Fallback to local data
+    const populatedRoom = userRooms.find(r => r._id === selectedRoom._id);
+    const participants = populatedRoom?.participants || selectedRoom.participants || [];
+    
+    return participants.filter((p): p is User => typeof p !== "string");
+  }, [selectedRoom, userRooms, fetchedMembers]);
   const resetTextAreaHeight = () => {
     if (inputRef.current) {
       inputRef.current.style.height = "24px";
@@ -346,12 +385,59 @@ const MessageInput = ({
   const handleTextChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
       const newText = e.target.value;
+      const cursorPos = e.target.selectionStart;
       setText(newText);
       resizeTextArea();
       handleIsTyping();
+
+      // Mention Logic
+      const sub = newText.slice(0, cursorPos);
+      const lastAt = sub.lastIndexOf('@');
+      if (lastAt !== -1) {
+        const query = sub.slice(lastAt + 1);
+        if (!/\s/.test(query)) {
+          setMentionQuery(query);
+          setShowMentionList(true);
+        } else {
+          setShowMentionList(false);
+        }
+      } else {
+        setShowMentionList(false);
+      }
     },
     [handleIsTyping, resizeTextArea]
   );
+
+  const filteredUsers = useMemo(() => {
+    // Console log for debugging
+    console.log("Mention Debug:", { showMentionList, participantsCount: roomParticipants.length, mentionQuery });
+    
+    if (!showMentionList || !roomParticipants.length) return [];
+    
+    return roomParticipants
+      .filter((u) => {
+        const query = mentionQuery.toLowerCase();
+        const usernameMatch = (u.username || "").toLowerCase().includes(query);
+        const nameMatch = (u.name || "").toLowerCase().includes(query);
+        return usernameMatch || nameMatch;
+      });
+  }, [showMentionList, roomParticipants, mentionQuery]);
+
+  const handleMentionSelect = (user: User) => {
+    const cursorPos = inputRef.current?.selectionStart || text.length;
+    const sub = text.slice(0, cursorPos);
+    const lastAt = sub.lastIndexOf("@");
+    const newText =
+      text.slice(0, lastAt) +
+      `@${user.username} ` +
+      text.slice(cursorPos);
+    setText(newText);
+    setShowMentionList(false);
+    
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  };
 
   // Add emoji to text
   const handleEmojiClick = useCallback((e: { emoji: string }) => {
@@ -444,6 +530,27 @@ const MessageInput = ({
 
   return (
     <div className="sticky bottom-0 w-full flex flex-col justify-center bg-leftBarBg z-20">
+      {showMentionList && filteredUsers.length > 0 && (
+        <div className="absolute bottom-full left-4 mb-2 w-64 bg-leftBarBg border border-chatBg rounded-lg shadow-2xl overflow-hidden z-[100] max-h-60 overflow-y-auto">
+          {filteredUsers.map((u) => (
+            <div
+              key={u._id}
+              onClick={() => handleMentionSelect(u)}
+              className="p-3 hover:bg-[#2c2c2c] cursor-pointer flex items-center gap-3 transition-colors duration-200 border-b border-chatBg last:border-0"
+            >
+              <img
+                src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=random`}
+                alt={u.name}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-white">{u.name}</span>
+                <span className="text-xs text-white/60">@{u.username}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <div
         className={`${
           replayData?._id || editData?._id
