@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/tlgrm/**",
       },
+      {
+        protocol: "https",
+        hostname: "cdn-icons-png.flaticon.com",
+      },
     ],
   },
   productionBrowserSourceMaps: false,

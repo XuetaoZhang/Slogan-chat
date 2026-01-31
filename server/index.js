@@ -1,10 +1,12 @@
 import { Server } from "socket.io";
+import "dotenv/config";
 import RoomSchema from "../src/schemas/roomSchema.js";
 import MessageSchema from "../src/schemas/messageSchema.js";
 import MediaSchema from "../src/schemas/mediaSchema.js";
 import LocationSchema from "../src/schemas/locationSchema.js";
 import UserSchema from "../src/schemas/userSchema.js";
 import connectToDB from "../src/db/index.js";
+import { handleSpoonAIBot } from "./spoonai.js";
 
 const PORT = process.env.PORT || 3001;
 const io = new Server(PORT, {
@@ -106,6 +108,14 @@ io.on("connection", (socket) => {
         );
 
         callback({ success: true, _id: newMsg._id });
+
+        // Try to trigger bot response
+        handleSpoonAIBot({
+          messageContent: populatedMsg.message,
+          roomID,
+          io,
+          senderId: sender
+        });
       }
     }
   );
@@ -126,6 +136,17 @@ io.on("connection", (socket) => {
         newRoomData.participants = newRoomData.participants.map(
           (data) => data?._id
         );
+      } else {
+        // 对于非 private (即 channel 或 group) 类型的房间，自动添加机器人
+        // 查找机器人用户
+        const botUser = await UserSchema.findOne({ username: "Sla" });
+        if (botUser) {
+            // 确保不重复添加
+            const botId = botUser._id.toString();
+            if (!newRoomData.participants.includes(botId)) {
+                newRoomData.participants.push(botId);
+            }
+        }
       }
 
       const newRoom = await RoomSchema.create(newRoomData);

@@ -260,7 +260,7 @@ const Settings = ({ getBack, updateRoute }: Props) => {
 
             <div className="cursor-pointer px-4 py-2 hover:bg-white/5 transition-all duration-200">
               <p className="text-sm">
-                +98{" "}
+                +86{" "}
                 {phone
                   .toString()
                   .split("")

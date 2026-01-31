@@ -98,7 +98,7 @@ const Main = ({ closeMenu, updateRoute, isOpen }: Props) => {
         <div>
           <p className=" font-vazirBold text-base">{name + " " + lastName}</p>
           <p className="text-darkGray text-xs pt-1">
-            +98{" "}
+            +86{" "}
             {phone
               .toString()
               .split("")

@@ -413,6 +413,11 @@ const MessageInput = ({
     // On desktop: Enter = send message, Shift+Enter = newline
     const isMobileDevice = isMobile();
 
+    // 如果正在输入法输入中，不处理 Enter
+    if (e.nativeEvent.isComposing) {
+        return;
+    }
+
     if (e.key === "Enter") {
       if (isMobileDevice) {
         // On mobile, Enter should go to the next line.
