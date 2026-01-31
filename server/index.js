@@ -5,7 +5,9 @@ import MediaSchema from "../src/schemas/mediaSchema.js";
 import LocationSchema from "../src/schemas/locationSchema.js";
 import UserSchema from "../src/schemas/userSchema.js";
 import connectToDB from "../src/db/index.js";
-const io = new Server(3001, {
+
+const PORT = process.env.PORT || 3001;
+const io = new Server(PORT, {
   cors: {
     origin: "*",
   },
@@ -16,7 +18,7 @@ const io = new Server(3001, {
   },
 });
 
-console.log("Socket server is running on port 3001");
+console.log(`Socket server is running on port ${PORT}`);
 
 let typings = [];
 let onlineUsers = [];
