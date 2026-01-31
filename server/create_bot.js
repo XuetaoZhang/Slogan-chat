@@ -2,6 +2,7 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import UserSchema from "../src/schemas/userSchema.js";
+import { fileURLToPath } from 'url';
 
 const BOT_USERNAME = "Slogan-AI";
 const BOT_NAME = "Slogan-AI";
@@ -9,16 +10,18 @@ const BOT_NAME = "Slogan-AI";
 const BOT_PHONE = "0000000000"; 
 const BOT_AVATAR = "/slogan-ai.png"; // User needs to place this file in public/
 
-const createBot = async () => {
+export const createBot = async (shouldConnect = true) => {
   try {
-    if (!process.env.MONGODB_URI) {
-      console.error("❌ Error: MONGODB_URI is not defined in .env file");
-      process.exit(1);
-    }
+    if (shouldConnect) {
+        if (!process.env.MONGODB_URI) {
+          console.error("❌ Error: MONGODB_URI is not defined in .env file");
+          return;
+        }
 
-    console.log("🔗 Connecting to MongoDB...");
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("✅ Connected.");
+        console.log("🔗 Connecting to MongoDB...");
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log("✅ Connected.");
+    }
 
     // Check if new bot exists
     let bot = await UserSchema.findOne({ username: BOT_USERNAME });
@@ -67,11 +70,12 @@ const createBot = async () => {
     console.log(`ID: ${bot._id}`);
     console.log(`Username: ${bot.username}`);
     
-    process.exit(0);
   } catch (error) {
     console.error("❌ Error creating/updating bot:", error);
-    process.exit(1);
   }
 };
 
-createBot();
+// Check if running directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    createBot(true).then(() => process.exit(0));
+}

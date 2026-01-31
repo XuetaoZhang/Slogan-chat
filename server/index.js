@@ -7,6 +7,7 @@ import LocationSchema from "../src/schemas/locationSchema.js";
 import UserSchema from "../src/schemas/userSchema.js";
 import connectToDB from "../src/db/index.js";
 import { handleSpoonAIBot } from "./spoonai.js";
+import { createBot } from "./create_bot.js";
 
 const PORT = process.env.PORT || 3001;
 const io = new Server(PORT, {
@@ -26,6 +27,9 @@ let typings = [];
 let onlineUsers = [];
 
 await connectToDB();
+
+// Ensure bot exists and is up-to-date (runs on server startup)
+await createBot(false);
 
 io.on("connection", (socket) => {
   socket.on(
