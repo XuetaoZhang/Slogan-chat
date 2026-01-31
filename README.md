@@ -1,2 +1,23 @@
-# Slogan-chat
-Slogan chat 前后端部分，部署用
+# Slogan-chat 前端，部署用
+
+模仿tg样式开发网页端即时通讯应用，支持用户注册登录，创建群聊和频道，发送消息，接收消息，查看消息历史记录，管理群聊和频道，设置个人信息等功能。
+使用Next.js 15开发前端，Socket.io开发后端实时通讯，MongoDB存储用户数据和消息记录。
+
+
+## ✨ Features  
+-  **Real-time messaging**
+-  **User authentication & management**  
+-  **Groups & channels** support  
+-  **Profile & settings management**  
+-  **Channel & group administration**
+-  **Progressive Web App (PWA) support**
+
+## ⚙️ Built with 
+-  **Next.js** 15
+-  **Socket.io** 即时通讯
+-  **Zustand** 数据管理
+-  **MongoDB & Liara** 数据管理
+-  **Tailwind CSS & DaisyUI** 现代UI设计
+-  **PWA support** 增强的网页体验
+- **TypeScript** 类型安全
+
