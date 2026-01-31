@@ -191,7 +191,9 @@ const Message = memo((msgData: MessageModel & msgDataProps) => {
                     !isLastMessageFromUser ? "rounded-br-md col-start-1" : ""
                   } ${
                     canMessageAction ? "bg-darkBlue/60" : "bg-darkBlue"
-                  } rounded-bl-xl rounded-br-lg px-1`
+                  } rounded-bl-xl ${
+                    isLastMessageFromUser ? "rounded-br-none" : "rounded-br-lg"
+                  } px-1`
                 : `${
                     canMessageAction ? "bg-gray-800/60" : "bg-gray-800"
                   } pr-1 rounded-br-xl pl-1`

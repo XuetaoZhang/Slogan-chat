@@ -143,7 +143,7 @@ io.on("connection", (socket) => {
       } else {
         // 对于非 private (即 channel 或 group) 类型的房间，自动添加机器人
         // 查找机器人用户
-        const botUser = await UserSchema.findOne({ username: "Slogan-AI" });
+        const botUser = await UserSchema.findOne({ username: "SentryNode-AI" });
         if (botUser) {
             // 确保不重复添加
             const botId = botUser._id.toString();

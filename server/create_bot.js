@@ -4,8 +4,8 @@ import bcrypt from "bcrypt";
 import UserSchema from "../src/schemas/userSchema.js";
 import { fileURLToPath } from 'url';
 
-const BOT_USERNAME = "Slogan-AI";
-const BOT_NAME = "Slogan-AI";
+const BOT_USERNAME = "SentryNode-AI";
+const BOT_NAME = "SentryNode AI";
 // Use a fake phone number that won't conflict with real users
 const BOT_PHONE = "0000000000"; 
 const BOT_AVATAR = "/slogan-ai.png"; // User needs to place this file in public/
@@ -34,10 +34,13 @@ export const createBot = async (shouldConnect = true) => {
        await bot.save();
        console.log(`🎉 Bot updated successfully!`);
      } else {
-         // Check if old bot "Sla" exists to rename it
-         const oldBot = await UserSchema.findOne({ username: "Sla" });
+         // Check if old bot "Sla" or "Slogan-AI" exists to rename it
+         const oldBot = await UserSchema.findOne({ 
+             username: { $in: ["Sla", "Slogan-AI"] } 
+         });
+
          if (oldBot) {
-             console.log(`🔄 Renaming old bot 'Sla' to '${BOT_USERNAME}'...`);
+             console.log(`🔄 Renaming old bot '${oldBot.username}' to '${BOT_USERNAME}'...`);
              oldBot.username = BOT_USERNAME;
              oldBot.name = BOT_NAME;
              oldBot.lastName = "";

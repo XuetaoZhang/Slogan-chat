@@ -69,6 +69,25 @@ const useMessages = ({
       }));
     };
 
+    const handleStreamMessage = ({
+      msgID,
+      streamedMsg,
+    }: {
+      msgID: string;
+      streamedMsg: string;
+    }) => {
+      setter((prev) => ({
+        selectedRoom: {
+          ...prev.selectedRoom!,
+          messages: (prev.selectedRoom?.messages || []).map((msg) =>
+            msg._id === msgID
+              ? { ...msg, message: streamedMsg }
+              : msg
+          ),
+        },
+      }));
+    };
+
     const handleNewMessageIdUpdate = ({
       tempId,
       _id,
@@ -122,6 +141,7 @@ const useMessages = ({
     rooms?.on("newMessage", handleNewMessage);
     rooms?.on("deleteMsg", handleDeleteMsg);
     rooms?.on("editMessage", handleEditMessage);
+    rooms?.on("streamMessage", handleStreamMessage);
     rooms?.on("newMessageIdUpdate", handleNewMessageIdUpdate);
     rooms?.on("seenMsg", handleSeenMsg);
 
@@ -129,6 +149,7 @@ const useMessages = ({
       rooms?.off("newMessage", handleNewMessage);
       rooms?.off("deleteMsg", handleDeleteMsg);
       rooms?.off("editMessage", handleEditMessage);
+      rooms?.off("streamMessage", handleStreamMessage);
       rooms?.off("newMessageIdUpdate", handleNewMessageIdUpdate);
       rooms?.off("seenMsg", handleSeenMsg);
     };
