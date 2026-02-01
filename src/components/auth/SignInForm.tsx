@@ -101,7 +101,7 @@ const SignInForm = () => {
             ></path>
           </g>
         </svg>
-        <span className="text-xs opacity-70">+98</span>
+        <span className="text-xs opacity-70">+86</span>
         <input
           {...register("phone", {
             required: " ",

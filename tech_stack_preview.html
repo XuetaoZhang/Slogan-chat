@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentryNode-Chat Tech Stack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .tech-badge {
+            transition: all 0.3s ease;
+        }
+        .tech-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="glass-card rounded-3xl p-10 max-w-4xl w-full border-t-4 border-t-blue-500">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-10">
+            <div>
+                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 tracking-tight">
+                    SentryNode-Chat
+                </h1>
+                <p class="text-slate-400 mt-2 text-lg">Next-Gen AI Real-time Messenger</p>
+            </div>
+            <div class="bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-500/20">
+                <span class="text-blue-400 font-mono text-sm">v0.1.0</span>
+            </div>
+        </div>
+
+        <!-- Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Frontend -->
+            <div class="space-y-4">
+                <h3 class="text-sm uppercase tracking-wider text-slate-500 font-semibold mb-3">Core & Frontend</h3>
+                <div class="flex flex-wrap gap-3">
+                    <div class="tech-badge flex items-center gap-2 bg-black/40 px-4 py-2.5 rounded-xl border border-slate-700">
+                        <div class="w-2 h-2 rounded-full bg-white"></div>
+                        <span class="font-bold text-white">Next.js 16</span>
+                    </div>
+                    <div class="tech-badge flex items-center gap-2 bg-[#58C4DC]/10 px-4 py-2.5 rounded-xl border border-[#58C4DC]/20">
+                        <span class="font-bold text-[#58C4DC]">React 19</span>
+                    </div>
+                    <div class="tech-badge flex items-center gap-2 bg-[#3178C6]/10 px-4 py-2.5 rounded-xl border border-[#3178C6]/20">
+                        <span class="font-bold text-[#3178C6]">TypeScript</span>
+                    </div>
+                    <div class="tech-badge flex items-center gap-2 bg-[#38BDF8]/10 px-4 py-2.5 rounded-xl border border-[#38BDF8]/20">
+                        <span class="font-bold text-[#38BDF8]">Tailwind 4</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backend & Realtime -->
+            <div class="space-y-4">
+                <h3 class="text-sm uppercase tracking-wider text-slate-500 font-semibold mb-3">Backend & Real-time</h3>
+                <div class="flex flex-wrap gap-3">
+                    <div class="tech-badge flex items-center gap-2 bg-[#8CC84B]/10 px-4 py-2.5 rounded-xl border border-[#8CC84B]/20">
+                        <span class="font-bold text-[#8CC84B]">Node.js</span>
+                    </div>
+                    <div class="tech-badge flex items-center gap-2 bg-white/10 px-4 py-2.5 rounded-xl border border-white/10">
+                        <span class="font-bold text-white">Socket.io</span>
+                    </div>
+                    <div class="tech-badge flex items-center gap-2 bg-[#47A248]/10 px-4 py-2.5 rounded-xl border border-[#47A248]/20">
+                        <span class="font-bold text-[#47A248]">MongoDB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State & UI -->
+            <div class="space-y-4">
+                <h3 class="text-sm uppercase tracking-wider text-slate-500 font-semibold mb-3">State & UI Kit</h3>
+                <div class="flex flex-wrap gap-3">
+                    <div class="tech-badge flex items-center gap-2 bg-[#443E38]/30 px-4 py-2.5 rounded-xl border border-[#443E38]">
+                        <span class="font-bold text-[#EAB308]">Zustand</span>
+                    </div>
+                    <div class="tech-badge flex items-center gap-2 bg-[#1AD1A5]/10 px-4 py-2.5 rounded-xl border border-[#1AD1A5]/20">
+                        <span class="font-bold text-[#1AD1A5]">DaisyUI 5</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI & Features -->
+            <div class="space-y-4">
+                <h3 class="text-sm uppercase tracking-wider text-slate-500 font-semibold mb-3">AI & Integration</h3>
+                <div class="flex flex-wrap gap-3">
+                    <div class="tech-badge flex items-center gap-2 bg-purple-500/10 px-4 py-2.5 rounded-xl border border-purple-500/20">
+                        <span class="font-bold text-purple-400">Spoon AI</span>
+                    </div>
+                    <div class="tech-badge flex items-center gap-2 bg-orange-500/10 px-4 py-2.5 rounded-xl border border-orange-500/20">
+                        <span class="font-bold text-orange-400">SSE Streaming</span>
+                    </div>
+                    <div class="tech-badge flex items-center gap-2 bg-pink-500/10 px-4 py-2.5 rounded-xl border border-pink-500/20">
+                        <span class="font-bold text-pink-400">PWA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-10 pt-6 border-t border-slate-700 flex justify-between items-center text-slate-500 text-sm">
+            <span>Powered by SentryNode Team</span>
+            <div class="flex gap-2">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

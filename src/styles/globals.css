@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @plugin "daisyui" {
   include: button, input, loading, dropdown, skeleton, chat, toggle, modal,
     checkbox;

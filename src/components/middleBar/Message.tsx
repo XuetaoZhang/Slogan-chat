@@ -15,6 +15,9 @@ import useGlobalStore from "@/stores/globalStore";
 import ProfileGradients from "../modules/ProfileGradients";
 import { IoTimeOutline } from "react-icons/io5";
 import { TbExclamationCircle } from "react-icons/tb";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 export interface msgDataProps {
   myId: string;
@@ -259,9 +262,46 @@ const Message = memo((msgData: MessageModel & msgDataProps) => {
                 />
               </div>
             )}
-            <p dir="auto" className="text-white break-all whitespace-pre-wrap">
-              {message}
-            </p>
+            <div
+              dir="auto"
+              className="markdown-content text-white break-words prose prose-invert prose-sm max-w-none [&>p]:my-0 [&>p]:leading-relaxed"
+            >
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkBreaks]}
+                components={{
+                  a: ({ node, ...props }) => (
+                    <a
+                      {...props}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:underline"
+                    />
+                  ),
+                  pre: ({ node, ...props }) => (
+                    <pre
+                      {...props}
+                      className="bg-black/30 p-2 rounded-md overflow-x-auto my-2"
+                    />
+                  ),
+                  code: ({ node, className, ...props }) => {
+                    const match = /language-(\w+)/.exec(className || "");
+                    const isInline = !match && !className;
+                    return (
+                      <code
+                        {...props}
+                        className={`${className || ""} ${
+                          isInline
+                            ? "bg-black/20 px-1 py-0.5 rounded text-[0.9em] font-mono"
+                            : "block"
+                        }`}
+                      />
+                    );
+                  },
+                }}
+              >
+                {message}
+              </ReactMarkdown>
+            </div>
           </div>
 
           <span
