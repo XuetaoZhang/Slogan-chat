@@ -21,3 +21,21 @@
 -  **PWA support** 增强的网页体验
 - **TypeScript** 类型安全
 
+## how to use 如何启动
+```bash
+# 克隆项目
+git clone https://github.com/yourusername/sentrynode-chat.git
+
+# 进入项目目录
+cd sentrynode-chat
+
+# 安装依赖
+npm install
+
+# 启动项目
+npm run dev
+
+# 启动后端
+npm run server
+```
+

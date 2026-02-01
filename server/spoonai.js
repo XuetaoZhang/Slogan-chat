@@ -4,19 +4,13 @@ import RoomSchema from "../src/schemas/roomSchema.js";
 import UserSchema from "../src/schemas/userSchema.js";
 
 // 配置机器人信息
-// 注意：以后如果换回 SpoonAI，只需要修改 apiUrl 和 model，以及解析返回值的逻辑
 const BOT_CONFIG = {
   triggerPrefix: "@", 
   botUsername: "SentryNode-AI", // 机器人的用户名
-  // 请在 .env 文件中配置 DEEPSEEK_API_KEY
-  apiKey: process.env.DEEPSEEK_API_KEY, 
-  // DeepSeek API 地址 (OpenAI 兼容接口)
-  // 可以在 .env 中通过 DEEPSEEK_API_URL 覆盖
-  apiUrl: process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/chat/completions",
-  // 使用的模型: deepseek-chat (V3) 或 deepseek-reasoner (R1)
-  model: process.env.DEEPSEEK_MODEL || "deepseek-chat",
-  // 是否开启流式输出 (默认开启，如果 provider 不支持流式，可设为 false)
-  enableStream: process.env.AI_ENABLE_STREAM !== 'false', 
+  // 新的 AI 接口地址
+  apiUrl: "https://95f712f.r8.cpolar.cn/api/v1/chat",
+  // 是否开启流式输出
+  enableStream: true, 
 };
 
 /**
@@ -108,9 +102,7 @@ export const handleSpoonAIBot = async ({ messageContent, roomID, io, senderId })
         }
     };
 
-    // 如果未开启流式，callDeepSeekAI 会忽略 onChunk，直接返回完整结果
-    // 如果开启了流式，callDeepSeekAI 会调用 onChunk，并最终返回完整结果
-    const fullResponse = await callDeepSeekAI(prompt, BOT_CONFIG.enableStream ? onChunk : null);
+    const fullResponse = await callSentryNodeAI(prompt, BOT_CONFIG.enableStream ? onChunk : null);
 
     // 8. 最终更新
     // 确保前端显示完整内容
@@ -136,101 +128,107 @@ export const handleSpoonAIBot = async ({ messageContent, roomID, io, senderId })
 };
 
 /**
- * 调用 DeepSeek API (支持流式)
+ * 调用新的 SentryNode AI API (支持流式)
  * @param {string} prompt 
  * @param {function} onChunk - 接收流式片段的回调函数 (chunk) => void
  * @returns {Promise<string>} 完整的回复内容
  */
-async function callDeepSeekAI(prompt, onChunk = null) {
-  if (!BOT_CONFIG.apiKey) {
-    return "配置错误：未找到 DEEPSEEK_API_KEY 环境变量。请在服务器 .env 文件中添加。";
-  }
-
+async function callSentryNodeAI(prompt, onChunk = null) {
   try {
     const isStreaming = BOT_CONFIG.enableStream && typeof onChunk === 'function';
 
     const response = await axios.post(
       BOT_CONFIG.apiUrl,
       {
-        model: BOT_CONFIG.model,
-        messages: [
-          { role: "system", content: "你是一个乐于助人的群聊机器人助手。" },
-          { role: "user", content: prompt }
-        ],
+        message: prompt,
+        is_vip: false,
         stream: isStreaming
       },
       {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${BOT_CONFIG.apiKey}`
+          "Accept": "text/event-stream", // 明确告诉服务器/代理我们期望流式数据
+          "Cache-Control": "no-cache",   // 防止代理缓存
+          "Connection": "keep-alive",    // 保持连接
+          "X-Accel-Buffering": "no"      // 尝试禁用 Nginx 缓冲 (如果对方使用了 Nginx)
         },
         timeout: 60000, // 60秒超时
         responseType: isStreaming ? 'stream' : 'json'
       }
     );
 
+    // 非流式处理
     if (!isStreaming) {
-      // 非流式处理 (兼容旧逻辑)
-      const content = response.data?.choices?.[0]?.message?.content;
-      return content || "（机器人似乎在思考，但没有说话）";
+      if (response.data && response.data.status === 'success') {
+          return response.data.answer || "（机器人似乎在思考，但没有说话）";
+      } else {
+          console.error("AI API Error Response:", response.data);
+          return "（机器人响应异常）";
+      }
     }
 
     // 流式处理
     let fullContent = "";
     const stream = response.data;
-    
-    // 简单判断 stream 是否是可读流
-    if (!stream.on) {
-        // 自动降级：如果服务器忽略了 stream: true 返回了 JSON 对象
-        if (stream.choices) {
-             const content = stream.choices?.[0]?.message?.content;
-             return content || "（机器人似乎在思考，但没有说话）";
-        }
-        return "（无法解析的响应格式）";
-    }
-
     let buffer = ""; // 用于缓存不完整的行
-    
+
     return new Promise((resolve, reject) => {
         stream.on('data', (chunk) => {
             buffer += chunk.toString();
-            const lines = buffer.split('\n');
-            // 数组最后一个元素是不完整的行（如果没有换行符，则是整个 buffer），保留在 buffer 中等待下一次 chunk
-            buffer = lines.pop(); 
-
-            for (const line of lines) {
-                const trimmedLine = line.trim();
-                if (!trimmedLine) continue;
-                if (trimmedLine === 'data: [DONE]') continue;
+            
+            // 处理 buffer 中的每一行
+            let lineEndIndex;
+            while ((lineEndIndex = buffer.indexOf('\n')) !== -1) {
+                const line = buffer.slice(0, lineEndIndex).trim();
+                buffer = buffer.slice(lineEndIndex + 1);
                 
+                if (!line) continue;
+                
+                let content = "";
+                // 尝试解析 SSE 格式 "data: {...}"
                 if (line.startsWith('data: ')) {
+                    const jsonStr = line.replace('data: ', '');
+                    if (jsonStr === '[DONE]') continue;
                     try {
-                        const jsonStr = line.replace('data: ', '');
                         const json = JSON.parse(jsonStr);
-                        const content = json.choices?.[0]?.delta?.content || "";
-                        if (content) {
-                            fullContent += content;
-                            if (onChunk) onChunk(content);
-                        }
-                    } catch (e) {
-                        // 忽略解析错误
-                    }
+                        content = json.answer || json.content || ""; 
+                    } catch (e) {}
+                } 
+                // 尝试直接解析 JSON 行 "{...}"
+                else if (line.startsWith('{') && line.endsWith('}')) {
+                    try {
+                        const json = JSON.parse(line);
+                        content = json.answer || json.content || "";
+                    } catch (e) {}
+                }
+                
+                if (content) {
+                    fullContent += content;
+                    if (onChunk) onChunk(content);
                 }
             }
         });
 
         stream.on('end', () => {
-            // 处理剩余的 buffer (通常 SSE 会以换行结束，buffer 应该为空，但以防万一)
-            if (buffer && buffer.trim().startsWith('data: ')) {
-                 try {
-                    const jsonStr = buffer.replace('data: ', '');
-                    const json = JSON.parse(jsonStr);
-                    const content = json.choices?.[0]?.delta?.content || "";
-                    if (content) {
-                        fullContent += content;
-                        if (onChunk) onChunk(content);
-                    }
-                } catch (e) {}
+            // 处理剩余的 buffer
+            if (buffer.trim()) {
+                const line = buffer.trim();
+                let content = "";
+                if (line.startsWith('data: ')) {
+                    try {
+                         const json = JSON.parse(line.replace('data: ', ''));
+                         content = json.answer || json.content || "";
+                    } catch(e) {}
+                } else if (line.startsWith('{')) {
+                    try {
+                        const json = JSON.parse(line);
+                        content = json.answer || json.content || "";
+                    } catch(e) {}
+                }
+                if (content) {
+                    fullContent += content;
+                    if (onChunk) onChunk(content);
+                }
             }
 
             if (!fullContent) fullContent = "（机器人似乎在思考，但没有说话）";
@@ -243,13 +241,7 @@ async function callDeepSeekAI(prompt, onChunk = null) {
     });
 
   } catch (error) {
-    console.error("DeepSeek API call failed:", error?.response?.data || error.message);
-    if (error?.response?.status === 401) {
-        return "API 认证失败，请检查 Key 是否正确。";
-    }
-    if (error?.response?.status === 402) {
-        return "余额不足，请检查 DeepSeek 账户余额。";
-    }
+    console.error("AI API call failed:", error?.response?.data || error.message);
     return "抱歉，我现在连接大脑有点困难，请稍后再试。";
   }
 }
